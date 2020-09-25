@@ -24,3 +24,12 @@ by having a high subdivision count) but can lead to visible mapping artifacts wh
 ![Artifact example](https://github.com/Mcgode/three-js-ssao-vertex-projection/blob/master/projection-artifact.png?raw=true)
 
 It can also be viewed [here](https://mcgode.github.io/three-js-ssao-vertex-projection/cube-vertex.html)
+
+### Solution
+
+The best solution would be, instead of doing a vertex projection, to simply pass the SSAO texture to the fragment shader 
+and use gl_FragCoords as the UV coordinates to map the texture to the mesh.
+
+The issue with this approach is that it would require, either, to use a custom shader all the way, which is bad for 
+maintainability, especially if you already have a big code base, or to directly modify three.js source code to support 
+it directly in most materials, but the issues would be similar. 
