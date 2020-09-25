@@ -12,8 +12,8 @@ integration of the result in the three.js pipeline, allowing for instance the su
 Another benefit of this approach is that it can be included without hacking/modifying three.js code, and only requires you to override the uv2 coordinates as the scene changes 
 
 Multiple example pages are provided in this repo to show the result:
-- [Basic SSAO pass](https://github.com) (notice how the pass simply darkens the lit parts, making them dark yellow instead of orange/dark orange)
-- [SSAO vertex mapping](https://github.com) (I know there are artifacts when moving the camera, it could be fixed, but this is not a point of focus, since the idea is mainly to show the difference with the SSAOPass when not moving)
+- [Basic SSAO pass](https://mcgode.github.io/three-js-ssao-vertex-projection/ssao-pass.html) (notice how the pass simply darkens the lit parts, making them dark yellow instead of orange/dark orange)
+- [SSAO vertex mapping](https://mcgode.github.io/three-js-ssao-vertex-projection/vertex-project.html) (I know there are artifacts when moving the camera, it could be fixed, but this is not a point of focus, since the idea is mainly to show the difference with the SSAOPass when not moving)
 
 ## Issues with the approach
 
@@ -23,4 +23,4 @@ by having a high subdivision count) but can lead to visible mapping artifacts wh
 
 ![Artifact example](https://github.com/Mcgode/three-js-ssao-vertex-projection/blob/master/projection-artifact.png?raw=true)
 
-It can also be viewed [here](https://github.com)
+It can also be viewed [here](https://mcgode.github.io/three-js-ssao-vertex-projection/cube-vertex.html)
