@@ -131,22 +131,27 @@
 
   }
 
+  function projectUv2( obj )
+  {
+    let bufferAttributes = obj.geometry.getAttribute( 'position' )
+    let uvs = new Float32Array( bufferAttributes.count * 2 )
+    uvs.fill(0)
+
+    for ( let i = 0; i < bufferAttributes.count ; i++ ) {
+      let v = obj.localToWorld( ( new THREE.Vector3() ).fromBufferAttribute( bufferAttributes, i ) )
+      let camVertex = v.project( camera )
+      uvs[ 2 * i ] = camVertex.x * 0.5 + 0.5
+      uvs[ 2 * i + 1 ] = camVertex.y * 0.5 + 0.5
+    }
+    let uvAttributes = new THREE.BufferAttribute( uvs, 2, false )
+    obj.geometry.setAttribute( "uv2", uvAttributes )
+  }
+
   function render()
   {
     scene.traverse(obj => {
       if ( obj.isMesh ) {
-        let bufferAttributes = obj.geometry.getAttribute( 'position' )
-        let uvs = new Float32Array( bufferAttributes.count * 2 )
-        uvs.fill(0)
-
-        for ( let i = 0; i < bufferAttributes.count ; i++ ) {
-          let v = obj.localToWorld( ( new THREE.Vector3() ).fromBufferAttribute( bufferAttributes, i ) )
-          let camVertex = v.project( camera )
-          uvs[ 2 * i ] = camVertex.x * 0.5 + 0.5
-          uvs[ 2 * i + 1 ] = camVertex.y * 0.5 + 0.5
-        }
-        let uvAttributes = new THREE.BufferAttribute( uvs, 2, false )
-        obj.geometry.setAttribute( "uv2", uvAttributes )
+        projectUv2(obj)
       }
     })
 
