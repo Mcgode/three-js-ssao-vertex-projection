@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>SSAO - Cube artifact</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <style>
+    body {
+      background-color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+<script src="js/three.js"></script>
+
+<script src="js/stats.min.js"></script>
+<script src="js/dat.gui.min.js"></script>
+
+<script src="js/EffectComposer.js"></script>
+<script src="js/ShaderPass.js"></script>
+<script src="js/SSAOPass.js"></script>
+<script src="js/CopyShader.js"></script>
+<script src="js/SimplexNoise.js"></script>
+<script src="js/SSAOShader.js"></script>
+<script src="js/OrbitControls.js"></script>
+
+<script>
+
+  var container, stats;
+  var camera, scene, renderer;
+  var composer;
+  var group;
+
+  init();
+  animate();
+
+  function init() {
+
+    container = document.createElement( 'div' );
+    document.body.appendChild( container );
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
+
+    camera = new THREE.PerspectiveCamera( 65, window.innerWidth / window.innerHeight, 0.1, 300 );
+    camera.position.set( 0, 0, 100 );
+    camera.lookAt( 0, 0, 0 )
+
+    let controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.25;
+    controls.rotateSpeed = 0.35;
+    controls.minZoom = 5;
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color( 0xaaaaaa );
+
+    scene.add( new THREE.DirectionalLight() );
+    scene.add( new THREE.HemisphereLight() );
+
+    let torusKnot = new THREE.Mesh(
+            new THREE.TorusKnotBufferGeometry( 1.5, 0.5, 100, 100),
+            new THREE.MeshStandardMaterial( { color: 0xff8800 } ),
+    )
+    torusKnot.scale.set( 20, 20, 20 )
+    torusKnot.position.set( 0, 0, 0 )
+    scene.add( torusKnot )
+
+    let cube = new THREE.Mesh(
+            new THREE.BoxBufferGeometry( 1, 1, 1, 1, 1, 1 ),
+            new THREE.MeshStandardMaterial( { color: 0xffffff } ),
+    )
+    cube.scale.set( 50, 50, 50 )
+    cube.position.set( -80, 0, 0 )
+    scene.add( cube )
+
+
+    stats = new Stats();
+    container.appendChild( stats.dom );
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    composer = new THREE.EffectComposer( renderer );
+
+    var ssaoPass = new THREE.SSAOPass( scene, camera, width, height );
+    ssaoPass.kernelRadius = 16;
+    ssaoPass.output = THREE.SSAOPass.OUTPUT.Blur
+    composer.addPass( ssaoPass );
+
+    cube.material.aoMap = ssaoPass.blurRenderTarget.texture
+    cube.material.needsUpdate = true
+
+    // Init gui
+    var gui = new dat.GUI();
+
+    // gui.add( ssaoPass, 'output', {
+    //   'Default': THREE.SSAOPass.OUTPUT.Default,
+    //   'SSAO Only': THREE.SSAOPass.OUTPUT.SSAO,
+    //   'SSAO Only + Blur': THREE.SSAOPass.OUTPUT.Blur,
+    //   'Beauty': THREE.SSAOPass.OUTPUT.Beauty,
+    //   'Depth': THREE.SSAOPass.OUTPUT.Depth,
+    //   'Normal': THREE.SSAOPass.OUTPUT.Normal
+    // } ).onChange( function ( value ) {
+    //
+    //   ssaoPass.output = parseInt( value );
+    //
+    // } );
+    gui.add( ssaoPass, 'kernelRadius' ).min( 0 ).max( 32 );
+    gui.add( ssaoPass, 'minDistance' ).min( 0.001 ).max( 0.02 );
+    gui.add( ssaoPass, 'maxDistance' ).min( 0.01 ).max( 0.3 );
+
+    window.addEventListener( 'resize', onWindowResize, false );
+
+  }
+
+  function onWindowResize() {
+
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( width, height );
+    composer.setSize( width, height );
+
+  }
+
+  function animate() {
+
+    requestAnimationFrame( animate );
+
+    stats.begin();
+    render();
+    stats.end();
+
+  }
+
+  function projectUv2( obj )
+  {
+    let bufferAttributes = obj.geometry.getAttribute( 'position' )
+    let uvs = new Float32Array( bufferAttributes.count * 2 )
+    uvs.fill(0)
+
+    for ( let i = 0; i < bufferAttributes.count ; i++ ) {
+      let v = obj.localToWorld( ( new THREE.Vector3() ).fromBufferAttribute( bufferAttributes, i ) )
+      let camVertex = v.project( camera )
+      uvs[ 2 * i ] = camVertex.x * 0.5 + 0.5
+      uvs[ 2 * i + 1 ] = camVertex.y * 0.5 + 0.5
+    }
+    let uvAttributes = new THREE.BufferAttribute( uvs, 2, false )
+    obj.geometry.setAttribute( "uv2", uvAttributes )
+  }
+
+  function render()
+  {
+    scene.traverse(obj => {
+      if ( obj.isMesh ) {
+        projectUv2(obj)
+      }
+    })
+
+    composer.render()
+
+    renderer.render(scene, camera)
+  }
+
+</script>
+</body>
+</html>
